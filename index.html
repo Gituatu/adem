@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Recorder</title>
+</head>
+<body>
+
+<script>
+    let mediaRecorder;
+    let audioChunks = [];
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.start(); // Start recording
+
+            mediaRecorder.addEventListener("dataavailable", event => {
+                audioChunks.push(event.data);
+            });
+        });
+
+    function sendAudioToServer() {
+        // Check if there is any audio data to send
+        if (audioChunks.length > 0) {
+            let blob = new Blob(audioChunks, { type: 'audio/wav; codecs=opus' });
+            let formData = new FormData();
+            formData.append('file', blob, 'audio.wav');
+
+            fetch('http://127.0.0.1:8080/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+
+            audioChunks = []; // Reset audioChunks after sending
+        }
+    }
+
+    // Call sendAudioToServer every 3 seconds
+    setInterval(sendAudioToServer, 3000);
+</script>
+
+</body>
+</html>
