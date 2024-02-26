@@ -15,9 +15,11 @@
         .then(stream => {
             mediaRecorder = new MediaRecorder(stream);
             mediaRecorder.start(); // Start recording
+            console.log(stream)
 
             mediaRecorder.addEventListener("dataavailable", event => {
                 audioChunks.push(event.data);
+                console.log(event.data)
             });
         });
 
